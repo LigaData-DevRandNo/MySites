@@ -9,11 +9,18 @@ from matplotlib.figure import Figure
 import io
 import csv
 import base64
+import os
 
 app = Flask(__name__)
 
 # Load the pre-trained LSTM model
-model = load_model("C:/Users/HomePC/Documents/Stock_prediction/model.h5")
+# absolute path to this file
+FILE_DIR = os.path.dirname(os.path.abspath(__file__))
+# absolute path to this file's root directory
+PARENT_DIR = os.path.join(FILE_DIR, os.pardir) 
+
+
+model = load_model(os.path.join(FILE_DIR,"model.h5"))
 
 # Function to get stock data
 def get_stock_data(ticker, start_date, end_date):
@@ -64,7 +71,7 @@ def read_tickers_from_csv(file_path):
 # Route for home page
 @app.route('/')
 def index():
-    tickers = read_tickers_from_csv('C:/Users/HomePC/Documents/Stock_prediction/stocks.csv')
+    tickers = read_tickers_from_csv(os.path.join(FILE_DIR,'stocks.csv'))
     return render_template('index.html', tickers=tickers)
     
 # Route for predicting stock prices
@@ -73,6 +80,7 @@ def predict():
     # Get the selected ticker from the form
     ticker_tuple = request.form['ticker']
     selected_ticker = ticker_tuple.split(',')[0].strip("('").strip("'").strip() # Extract the first element of the tuple
+    selected_company = ticker_tuple.split(',')[1].strip("')").strip("'").strip()
     start_date = '2010-01-01'
     end_date = '2022-01-01'
 
@@ -99,7 +107,7 @@ def predict():
     # Visualize predictions
     plot_url = visualize_predictions(close_prices[sequence_length:], predictions)
 
-    return render_template('result.html', ticker=ticker, plot_url=plot_url)
+    return render_template('result.html', ticker=selected_company, plot_url=plot_url)
 
 if __name__ == "__main__":
     app.run(debug=True)
